@@ -100,32 +100,60 @@ I also tried a Random Forest (100 trees). It scored worse (CV RMSE 0.510) and sa
 
 ## How to run
 
-Tested with Python 3.12 on Windows (PowerShell), from the repo root.
+**Requires Python 3.9–3.12.** The course pins `scikit-learn==1.5.1`, which has no installers for Python 3.13 or newer, so `pip install` fails there. Tested with Python 3.12 on Windows and on Ubuntu (CI). If you don't have Python 3.12, use [Docker](#option-b-docker) instead.
 
-```powershell
+### Option A: Python
+
+```bash
+git clone https://github.com/keithfernandes12/IE-7374-MLOps-Lab03.git
+cd IE-7374-MLOps-Lab03
 python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements-dev.txt
-
-python src/train.py                         # downloads the data on first run (~370 KB)
-uvicorn main:app --app-dir src --reload     # http://127.0.0.1:8000/docs
-pytest
 ```
 
-`train.py` prints the comparison and the selected model:
+Activate the environment:
+
+| OS | Command |
+|---|---|
+| Windows (PowerShell) | `.venv\Scripts\activate` |
+| macOS / Linux | `source .venv/bin/activate` |
+
+If PowerShell says running scripts is disabled, run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` first. It only applies to the current window.
+
+Then, from the repo root:
+
+```bash
+pip install -r requirements-dev.txt
+python src/train.py                         # downloads the data on first run (~370 KB)
+pytest                                      # 19 tests
+uvicorn main:app --app-dir src --reload     # http://127.0.0.1:8000/docs
+```
+
+### Option B: Docker
+
+Needs only Docker. The image uses Python 3.12 and serves the trained model from the repo.
+
+```bash
+docker build -t housing-api .
+docker run --rm -p 8000:8000 housing-api    # http://127.0.0.1:8000/docs
+```
+
+## Reproducing the results
+
+Training is deterministic (fixed `random_state`, unshuffled CV folds). I checked this from a fresh clone on Windows, and CI retrains on Ubuntu on every push:
+
+| Step | Expected result |
+|---|---|
+| `python src/train.py` | The output below. `model/housing_model.pkl` is rebuilt byte-for-byte identical; only `trained_at` in `metadata.json` changes |
+| `pytest` | `19 passed` |
+| `GET /` | `{"status":"healthy","model_loaded":true}` |
+| `POST /predict` with the Swagger example | `"median_house_value": 420817.37` |
+| `POST /predict` with `med_inc` = 14.5 | `437823.35` plus one MedInc warning (see below) |
 
 ```
 linear_regression        CV RMSE 0.726 ± 0.022
 decision_tree            CV RMSE 0.651 ± 0.022
 hist_gradient_boosting   CV RMSE 0.475 ± 0.013
 Selected hist_gradient_boosting: test {'rmse': 0.4622, 'mae': 0.3109, 'r2': 0.8442, 'rmse_usd': 46219, 'mae_usd': 31086}
-```
-
-With Docker:
-
-```powershell
-docker build -t housing-api .
-docker run --rm -p 8000:8000 housing-api
 ```
 
 ## Verifying it works
@@ -136,11 +164,18 @@ docker run --rm -p 8000:8000 housing-api
 
 ![Predict response](assets/housing_predict.jpg)
 
-**A warning.** A very high income is accepted but flagged:
+**A warning.** A very high income is accepted but flagged. In Swagger UI, change `med_inc` to `14.5`, or use curl:
 
 ```powershell
+# Windows PowerShell
 curl.exe -X POST http://127.0.0.1:8000/predict -H "Content-Type: application/json" `
   -d '{\"med_inc\": 14.5, \"house_age\": 41, \"ave_rooms\": 6.98, \"ave_bedrms\": 1.02, \"population\": 322, \"ave_occup\": 2.56, \"latitude\": 37.88, \"longitude\": -122.23}'
+```
+
+```bash
+# macOS / Linux
+curl -X POST http://127.0.0.1:8000/predict -H "Content-Type: application/json" \
+  -d '{"med_inc": 14.5, "house_age": 41, "ave_rooms": 6.98, "ave_bedrms": 1.02, "population": 322, "ave_occup": 2.56, "latitude": 37.88, "longitude": -122.23}'
 ```
 
 ```json
