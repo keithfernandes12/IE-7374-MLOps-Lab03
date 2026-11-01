@@ -1,0 +1,74 @@
+{
+  "model_version": "1.0.0",
+  "model_name": "hist_gradient_boosting",
+  "trained_at": "2026-11-01T23:03:35+00:00",
+  "sklearn_version": "1.5.1",
+  "n_train": 16512,
+  "n_test": 4128,
+  "features": [
+    "MedInc",
+    "HouseAge",
+    "AveRooms",
+    "AveBedrms",
+    "Population",
+    "AveOccup",
+    "Latitude",
+    "Longitude"
+  ],
+  "target_unit_usd": 100000,
+  "cv_rmse": {
+    "linear_regression": {
+      "rmse_mean": 0.7262,
+      "rmse_std": 0.0218
+    },
+    "decision_tree": {
+      "rmse_mean": 0.6509,
+      "rmse_std": 0.0218
+    },
+    "hist_gradient_boosting": {
+      "rmse_mean": 0.4754,
+      "rmse_std": 0.0128
+    }
+  },
+  "test_metrics": {
+    "rmse": 0.4622,
+    "mae": 0.3109,
+    "r2": 0.8442,
+    "rmse_usd": 46219,
+    "mae_usd": 31086
+  },
+  "feature_ranges": {
+    "MedInc": {
+      "p1": 1.0618,
+      "p99": 10.4546
+    },
+    "HouseAge": {
+      "p1": 4.0,
+      "p99": 52.0
+    },
+    "AveRooms": {
+      "p1": 2.5718,
+      "p99": 10.3694
+    },
+    "AveBedrms": {
+      "p1": 0.8696,
+      "p99": 2.1261
+    },
+    "Population": {
+      "p1": 86.0,
+      "p99": 5689.12
+    },
+    "AveOccup": {
+      "p1": 1.5391,
+      "p99": 5.4041
+    },
+    "Latitude": {
+      "p1": 32.68,
+      "p99": 40.61
+    },
+    "Longitude": {
+      "p1": -123.2189,
+      "p99": -116.26
+    }
+  }
+}
